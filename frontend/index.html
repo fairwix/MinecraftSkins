@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Skins | Магазин скинов</title>
+
+    <!-- Google Fonts для красивого шрифта -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Bootstrap (только для сетки и базовых компонентов) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Наши стили -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- Красивая шапка -->
+<header class="header">
+    <div class="container">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-cube"></i>
+                <h1>Minecraft Skins</h1>
+            </div>
+            <div class="user-info">
+                <i class="far fa-user-circle"></i>
+                <span>user123</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <!-- Вкладки с красивым дизайном -->
+    <div class="tabs-container">
+        <button class="tab-btn active" id="skins-tab" onclick="switchTab('skins')">
+            <i class="fas fa-paint-brush"></i>
+            Скины
+        </button>
+        <button class="tab-btn" id="purchases-tab" onclick="switchTab('purchases')">
+            <i class="fas fa-shopping-bag"></i>
+            Мои покупки
+        </button>
+    </div>
+
+    <!-- Контент -->
+    <div id="skins-content" class="tab-content active">
+        <div class="content-header">
+            <h2>Доступные скины</h2>
+            <div class="btc-info" id="btc-rate-info">
+                <i class="fab fa-bitcoin"></i>
+                <span>Загрузка курса...</span>
+            </div>
+        </div>
+
+        <div id="skins-grid" class="skins-grid">
+            <!-- Сюда загрузятся скины -->
+        </div>
+
+        <div id="skins-error" class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span></span>
+        </div>
+    </div>
+
+    <div id="purchases-content" class="tab-content">
+        <div class="content-header">
+            <h2>История покупок</h2>
+        </div>
+
+        <div id="purchases-list" class="purchases-list">
+            <!-- Сюда загрузятся покупки -->
+        </div>
+
+        <div id="purchases-error" class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span></span>
+        </div>
+    </div>
+</main>
+
+<!-- Модальное окно для уведомлений -->
+<div id="notification" class="notification">
+    <div class="notification-content">
+        <i class="fas fa-check-circle" id="notification-icon"></i>
+        <span id="notification-message"></span>
+    </div>
+</div>
+<script src="config.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

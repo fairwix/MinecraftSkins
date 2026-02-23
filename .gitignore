@@ -1,0 +1,38 @@
+## .NET
+bin/
+obj/
+appsettings.Development.json
+appsettings.Production.json
+*.user
+*.suo
+*.userprefs
+TestResults/
+
+## Docker
+docker-compose.override.yml
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Frontend
+node_modules/
+npm-debug.log
+
+## IDE
+.vs/
+.idea/
+.vscode/
+
+## Coverage
+coverage/
+*.coverage
+*.coveragexml
+
+## Logs
+logs/
+*.log
+
+## Temp files
+all_code.txt
+all_coe.txt
