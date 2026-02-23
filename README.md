@@ -38,6 +38,8 @@
 - **FluentValidation** — валидация DTO
 - **AutoMapper** — маппинг сущностей
 - **IMemoryCache** — кэширование курса BTC
+- **CancellationToken** — передаётся во все асинхронные методы (БД, HTTP-вызовы)
+- **ILogger<T>** — структурированное логирование во всех сервисах и middleware
 
 ### Frontend
 - **HTML5**, **CSS3**, **JavaScript** (vanilla)
