@@ -324,3 +324,4 @@ reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coveragereport"
 GitHub: [@fairwix](https://github.com/fairwix)
 
 
+# CI/CD test
