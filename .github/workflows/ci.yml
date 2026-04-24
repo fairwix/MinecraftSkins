@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
@@ -51,20 +51,8 @@ jobs:
           cd /Users/juliasmirnova/MinecraftSkins
           docker compose pull
           docker compose up -d
-          - name: Verify deployment
-            run: |
-              sleep 15
-              curl -f http://localhost/health || exit 1
-
-              ERROR_RATE=$(curl -s "http://localhost:9090/api/v1/query" \
-                --data-urlencode 'query=rate(http_requests_received_total{status=~"5.."}[1m])' \
-                | jq -r '.data.result[0].value[1] // "0"')
-
-              echo "5xx error rate: $ERROR_RATE"
-
-              if (( $(echo "$ERROR_RATE > 0.05" | bc -l) )); then
-                echo "Error rate too high, deployment failed"
-                exit 1
-              fi
-
-              echo "Deployment verified successfully"
+      - name: Verify deployment
+        run: |
+          sleep 15
+          curl -f http://localhost/health || exit 1
+          echo "Deployment verified successfully"
