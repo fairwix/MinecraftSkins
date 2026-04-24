@@ -1,15 +1,15 @@
-version: '3.8'
-
 services:
+  # База данных (общая для всех)
   postgres:
     image: postgres:15
     container_name: minecraftskins-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: minecraftskins
     ports:
-      - "5433:5432"
+      - "5433:5432"  
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -19,36 +19,166 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  backend:
+  
+  backend1:
     build:
       context: .
       dockerfile: MinecraftSkins.WebAPI/Dockerfile
-    container_name: minecraftskins-backend
+    container_name: minecraftskins-backend1
+    restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres
-    ports:
-      - "5001:80"
+      - INSTANCE_ID=backend1   
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - minecraftskins-network
 
-  frontend:
-    image: nginx:alpine
-    container_name: minecraftskins-frontend
-    volumes:
-      - ./frontend:/usr/share/nginx/html
-    ports:
-      - "8080:80"
+  backend2:
+    build:
+      context: .
+      dockerfile: MinecraftSkins.WebAPI/Dockerfile
+    container_name: minecraftskins-backend2
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres
+      - INSTANCE_ID=backend2  
     depends_on:
-      - backend
+      postgres:
+        condition: service_healthy
     networks:
       - minecraftskins-network
 
+  backend3:
+    build:
+      context: .
+      dockerfile: MinecraftSkins.WebAPI/Dockerfile
+    container_name: minecraftskins-backend3
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres
+      - INSTANCE_ID=backend3  
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - minecraftskins-network
+  
+  backend4:
+    build:
+      context: .
+      dockerfile: MinecraftSkins.WebAPI/Dockerfile
+    container_name: minecraftskins-backend4
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres
+      - INSTANCE_ID=backend4
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - minecraftskins-network
+    
+  backend5:
+      build:
+        context: .
+        dockerfile: MinecraftSkins.WebAPI/Dockerfile
+      container_name: minecraftskins-backend5
+      restart: unless-stopped
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ASPNETCORE_URLS=http://+:80
+        - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres
+        - INSTANCE_ID=backend5
+      depends_on:
+        postgres:
+          condition: service_healthy
+      networks:
+        - minecraftskins-network
+    
+  nginx:
+    image: nginx:alpine
+    container_name: minecraftskins-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"      # HTTP (будет редиректить на HTTPS)
+      - "443:443"    # HTTPS (основной вход)
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro   # конфиг Nginx
+      - ./nginx/certs:/etc/nginx/certs:ro             # SSL сертификаты
+      - ./frontend:/usr/share/nginx/html:ro           # статика фронтенда 
+      - ./nginx/static:/usr/share/nginx/static:ro     # статика для теста
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
+      - backend4
+      - backend5
+    networks:
+      - minecraftskins-network
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: minecraftskins-nginx-exporter
+    command: -nginx.scrape-uri http://nginx:9113/stub_status
+    networks:
+      - minecraftskins-network
+    depends_on:
+      - nginx
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: minecraftskins-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - minecraftskins-network
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    container_name: minecraftskins-loki
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml
+    ports:
+      - "3100:3100"
+    networks:
+      - minecraftskins-network
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: minecraftskins-promtail
+    volumes:
+      - ./promtail/config.yml:/etc/promtail/config.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - minecraftskins-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: minecraftskins-grafana
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+      
+    networks:
+      - minecraftskins-network
+    restart: unless-stopped
 networks:
   minecraftskins-network:
     driver: bridge

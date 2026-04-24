@@ -5,6 +5,7 @@ using MinecraftSkins.Application.Extensions;
 using MinecraftSkins.Infrastructure.Extensions;
 using MinecraftSkins.WebAPI.HealthChecks;
 using MinecraftSkins.Infrastructure.Data;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,7 +58,14 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
+app.Use(async (context, next) =>
+{
+    var instanceId = Environment.GetEnvironmentVariable("INSTANCE_ID") ?? "unknown";
+    context.Response.Headers.Append("X-Instance-Id", instanceId);
+    await next();
+});
+app.UseHttpMetrics();
+app.MapMetrics();     
 app.MapControllers();
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health-ui");

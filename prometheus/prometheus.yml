@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'app'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['backend1:80', 'backend2:80', 'backend3:80']
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
