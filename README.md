@@ -8,7 +8,7 @@
 Магазин Minecraft скинов с динамическим ценообразованием на основе курса BTC/USD. 
 Цена рассчитывается в реальном времени при просмотре каталога и фиксируется в момент покупки.
 
-## 📋 Оглавление
+## Оглавление
 - [Возможности](#-возможности)
 - [Технологический стек](#-технологический-стек)
 - [Архитектура](#-архитектура)
@@ -20,17 +20,17 @@
 - [Безопасность и конкурентность](#-безопасность-и-конкурентность)
 - [Особенности реализации](#-особенности-реализации)
 
-## ✨ Возможности
+## Возможности
 
-- 📦 **Каталог скинов** — просмотр с актуальными ценами
-- 💰 **BTC-ценообразование** — автоматический расчёт цены от курса Bitcoin
-- 🛒 **Покупка** — с записью истории и фиксацией курса
-- 📜 **История покупок** — детальная информация о каждой транзакции
-- 💾 **Кэширование курса** — с fallback-механизмом для отказоустойчивости
-- 🔒 **Идемпотентность** — защита от повторных покупок
-- 🏷 **Soft delete** — безопасное удаление скинов
+-  **Каталог скинов** — просмотр с актуальными ценами
+-  **BTC-ценообразование** — автоматический расчёт цены от курса Bitcoin
+-  **Покупка** — с записью истории и фиксацией курса
+-  **История покупок** — детальная информация о каждой транзакции
+-  **Кэширование курса** — с fallback-механизмом для отказоустойчивости
+-  **Идемпотентность** — защита от повторных покупок
+-  **Soft delete** — безопасное удаление скинов
 
-## 🛠 Технологический стек
+## Технологический стек
 
 ### Backend
 - **.NET 8** + ASP.NET Core Web API
@@ -58,7 +58,7 @@
 - **FluentAssertions** — читаемые assertions
 - **ReportGenerator** — отчёты о покрытии
 
-## 🏗 Архитектура
+##  Архитектура
 
 Проект разделён на 4 слоя в соответствии с принципами чистой архитектуры:
 
@@ -96,7 +96,7 @@ MinecraftSkins/
 - Swagger документация
 - Health Checks
 
-## 🧮 Формула расчёта цены
+##  Формула расчёта цены
 
 ```
 FinalPrice = BasePriceUsd × (1 + BTC_USD_Rate ÷ 50000)
@@ -110,7 +110,7 @@ FinalPrice = BasePriceUsd × (1 + BTC_USD_Rate ÷ 50000)
 - **StandardPriceCalculator** — базовая формула
 - **PromoPriceCalculator** — со скидкой 10% (демонстрация расширяемости)
 
-## 🚀 Запуск проекта
+##  Запуск проекта
 
 ### Через Docker (рекомендуется)
 
@@ -166,7 +166,7 @@ python3 -m http.server 8080
 # Frontend будет доступен на http://localhost:8080
 ```
 
-## 📚 API Endpoints
+##  API Endpoints
 
 ### Skins
 | Метод | Endpoint | Описание | Параметры |
@@ -189,34 +189,34 @@ python3 -m http.server 8080
 | GET | `/api/purchases` | История покупок | `mineOnly`, `skinId`, `from`, `to`, `skip`, `take` |
 | GET | `/api/purchases/{id}` | Детали покупки | — |
 
-## 🧪 Тестирование
+##  Тестирование
 
 Фокус тестирования сделан на **бизнес-логике (Application + Domain)**, так как именно здесь сосредоточена основная сложность и ценность приложения.
 
-### ✅ Что тестируется
+###  Что тестируется
 
 **Domain Layer (100%):**
 - Сущности `Skin` и `Purchase` — инициализация, свойства
 
 **Application Layer (92%):**
-- ✅ **IPriceCalculator** — Standard и Promo стратегии с различными входными данными
-- ✅ **PurchaseService** — создание покупки, идемпотентность, optimistic concurrency
-- ✅ **SkinService** — CRUD операции, soft delete, фильтрация
-- ✅ **FluentValidation** — все DTO (Create/Update Skin, Create Purchase)
-- ✅ **AutoMapper** — корректность маппингов
-- ✅ **Кастомные исключения** — SkinUnavailableException, ExternalServiceUnavailableException
+-  **IPriceCalculator** — Standard и Promo стратегии с различными входными данными
+-  **PurchaseService** — создание покупки, идемпотентность, optimistic concurrency
+-  **SkinService** — CRUD операции, soft delete, фильтрация
+-  **FluentValidation** — все DTO (Create/Update Skin, Create Purchase)
+-  **AutoMapper** — корректность маппингов
+-  **Кастомные исключения** — SkinUnavailableException, ExternalServiceUnavailableException
 
 **Infrastructure Layer (выборочно):**
-- ✅ **BtcRateService** — кэширование, fallback при ошибках API, обработка таймаутов
-- ✅ **DbContext конфигурации** — настройки сущностей, индексы, глобальные фильтры
-- ⚠️ Миграции и SeedData не тестируются (инфраструктурный код)
+-  **BtcRateService** — кэширование, fallback при ошибках API, обработка таймаутов
+-  **DbContext конфигурации** — настройки сущностей, индексы, глобальные фильтры
+-  Миграции и SeedData не тестируются (инфраструктурный код)
 
 **WebAPI Layer (выборочно):**
-- ✅ **ExceptionHandlingMiddleware** — обработка всех типов исключений (400, 404, 409, 503)
-- ✅ **HealthChecks** — DatabaseHealthCheck, BtcRateHealthCheck
-- ⚠️ Контроллеры тестируются минимально — они содержат только оркестрацию и не имеют бизнес-логики
+-  **ExceptionHandlingMiddleware** — обработка всех типов исключений (400, 404, 409, 503)
+-  **HealthChecks** — DatabaseHealthCheck, BtcRateHealthCheck
+-  Контроллеры тестируются минимально — они содержат только оркестрацию и не имеют бизнес-логики
 
-### 🎯 Почему такой подход?
+### Почему такой подход?
 
 > **"Контроллеры должны быть тонкими"** — это один из ключевых принципов чистой архитектуры. 
 > 
@@ -253,7 +253,7 @@ public async Task CreatePurchaseAsync_WithSameIdempotencyKey_ReturnsExistingPurc
 }
 ```
 
-### 🚀 Запуск тестов
+###  Запуск тестов
 
 ```bash
 # Запустить все тесты
@@ -274,14 +274,14 @@ reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coveragereport"
 # Открыть отчёт: open coveragereport/index.html
 ```
 
-## 📊 Мониторинг
+##  Мониторинг
 
 - **Health Check**: http://localhost:5001/health
 - **Детальный Health Check**: http://localhost:5001/health/detailed
 - **Swagger**: http://localhost:5001/swagger
 - **Логи**: `docker-compose logs -f`
 
-## 🔐 Безопасность и конкурентность
+##  Безопасность и конкурентность
 
 - **Idempotency-Key** — защита от повторных покупок (хранится в БД)
 - **RowVersion** — optimistic concurrency для скинов
@@ -289,36 +289,36 @@ reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coveragereport"
 - **X-User-Id** — мок-авторизация для демо
 - **Транзакции** — атомарность операций покупки
 
-## ⚡ Особенности реализации
+##  Особенности реализации
 
 ### Внешнее API (CoinGecko)
-- ✅ HttpClientFactory с типизированным клиентом
-- ✅ Таймаут 5 секунд
-- ✅ Обработка ошибок (сетевые, JSON, статусы)
-- ✅ Rate limit не превышается благодаря кэшированию
+-  HttpClientFactory с типизированным клиентом
+-  Таймаут 5 секунд
+-  Обработка ошибок (сетевые, JSON, статусы)
+-  Rate limit не превышается благодаря кэшированию
 
 ### Кэширование курса BTC
-- ✅ IMemoryCache с TTL 60 секунд
-- ✅ Fallback до последнего успешного значения (10 минут)
-- ✅ При отсутствии свежего fallback → 503 Service Unavailable
-- ✅ Endpoint /api/rates/btc-usd с метаданными (source, age)
+-  IMemoryCache с TTL 60 секунд
+-  Fallback до последнего успешного значения (10 минут)
+-  При отсутствии свежего fallback → 503 Service Unavailable
+-  Endpoint /api/rates/btc-usd с метаданными (source, age)
 
 ### EF Core
-- ✅ Миграции с автоматическим применением при старте
-- ✅ Seeding начальных скинов
-- ✅ AsNoTracking для чтения каталогов
-- ✅ Глобальный фильтр для soft delete
-- ✅ Индексы на часто используемые поля
+-  Миграции с автоматическим применением при старте
+-  Seeding начальных скинов
+-  AsNoTracking для чтения каталогов
+-  Глобальный фильтр для soft delete
+-  Индексы на часто используемые поля
 
 ### Обработка ошибок
-- ✅ Централизованное middleware
-- ✅ ProblemDetails (RFC 7807)
-- ✅ 400 — Validation errors
-- ✅ 404 — Not found
-- ✅ 409 — Skin unavailable
-- ✅ 503 — External service unavailable
+-  Централизованное middleware
+-  ProblemDetails (RFC 7807)
+-  400 — Validation errors
+-  404 — Not found
+-  409 — Skin unavailable
+-  503 — External service unavailable
 
-## 👨‍💻 Автор
+## Автор
 
 **fairwix**  
 GitHub: [@fairwix](https://github.com/fairwix)
