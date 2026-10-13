@@ -35,7 +35,7 @@ public class SkinService : ISkinService
     {
         return await _context.Skins
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted, cancellationToken);
     }
 
     public async Task<bool> ExistsAndAvailableAsync(Guid id, CancellationToken cancellationToken)
@@ -47,7 +47,7 @@ public class SkinService : ISkinService
     public async Task<Skin?> GetByIdWithVersionAsync(Guid id, CancellationToken cancellationToken)
     {
         return await _context.Skins
-            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken); 
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted, cancellationToken);
     }
 
     public async Task<Skin> CreateAsync(Skin skin, CancellationToken cancellationToken)
@@ -63,7 +63,9 @@ public class SkinService : ISkinService
 
     public async Task<Skin?> UpdateAsync(Guid id, string? name, decimal? basePrice, bool? isAvailable, CancellationToken cancellationToken)
     {
-        var skin = await _context.Skins.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        var skin = await _context.Skins.FirstOrDefaultAsync(
+            s => s.Id == id && !s.IsDeleted,
+            cancellationToken);
         if (skin == null) return null;
 
         if (name != null) skin.Name = name;
@@ -78,7 +80,9 @@ public class SkinService : ISkinService
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var skin = await _context.Skins.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        var skin = await _context.Skins.FirstOrDefaultAsync(
+            s => s.Id == id && !s.IsDeleted,
+            cancellationToken);
         if (skin == null) return false;
 
         skin.IsDeleted = true;
@@ -96,7 +100,8 @@ public class SkinService : ISkinService
         CancellationToken cancellationToken)
     {
         IQueryable<Skin> query = _context.Skins
-            .AsNoTracking();
+            .AsNoTracking()
+            .Where(s => !s.IsDeleted);
 
         if (availableOnly)
             query = query.Where(s => s.IsAvailable);
@@ -119,7 +124,8 @@ public class SkinService : ISkinService
         CancellationToken cancellationToken)
     {
         IQueryable<Skin> query = _context.Skins
-            .AsNoTracking();
+            .AsNoTracking()
+            .Where(s => !s.IsDeleted);
 
         if (availableOnly)
             query = query.Where(s => s.IsAvailable);

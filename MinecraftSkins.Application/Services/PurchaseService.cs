@@ -64,7 +64,7 @@ public class PurchaseService : IPurchaseService
         }
         
         var skin = await _context.Skins
-            .FirstOrDefaultAsync(s => s.Id == skinId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == skinId && !s.IsDeleted, cancellationToken);
 
         if (skin == null || skin.IsDeleted)
             throw new SkinUnavailableException(skinId, "Skin not found");
