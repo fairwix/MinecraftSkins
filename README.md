@@ -335,4 +335,20 @@ reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coveragereport"
 GitHub: [@fairwix](https://github.com/fairwix)
 
 
-# CI/CD test
+## CI/CD
+
+Workflow `.github/workflows/ci.yml` запускается при push в `main`: восстанавливает зависимости, собирает и тестирует решение, публикует Docker-образ с тегами `latest` и SHA коммита, затем разворачивает именно SHA-версию.
+
+Для deploy нужен зарегистрированный в настройках репозитория GitHub Actions **self-hosted runner** с меткой `self-hosted`. На runner должны быть установлены Docker Engine, Docker Compose plugin и `curl`; runner должен быть запущен и иметь доступ к Docker Hub и интернету. Пока подходящий runner offline или не зарегистрирован, deploy будет ждать в очереди.
+
+Добавьте в **Settings → Secrets and variables → Actions → Repository secrets**:
+
+- `DOCKER_USERNAME` — имя пользователя Docker Hub;
+- `DOCKER_PASSWORD` — Docker Hub access token;
+- `MCS_POSTGRES_PASSWORD` — пароль PostgreSQL;
+- `MCS_ADMIN_API_KEY` — API key администратора, не короче 32 байт;
+- `MCS_DEMO_USER_API_KEY` — API key пользователя, не короче 32 байт.
+
+`MCS_ADMIN_USER_ID` и `MCS_DEMO_USER_ID` необязательны; по умолчанию используются `admin` и `demo`. Сгенерируйте API keys и пароль базы отдельно командой `openssl rand -hex 32`. Не добавляйте эти значения в репозиторий.
+
+Compose использует этот набор секретов для мигратора и API контейнеров. Путь исходников на сервере больше не зафиксирован: deploy checkout-ит именно коммит из запущенного workflow и использует соответствующие ему Nginx/frontend конфиги.
