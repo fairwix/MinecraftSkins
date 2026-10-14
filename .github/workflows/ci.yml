@@ -73,6 +73,15 @@ jobs:
             fi
           done
 
+      - name: Prepare temporary Docker config
+        run: |
+          docker_config="$RUNNER_TEMP/minecraftskins-docker-config-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "DOCKER_CONFIG=$docker_config" >> "$GITHUB_ENV"
+          mkdir -p "$docker_config"
+          chmod 700 "$docker_config"
+          printf '{"auths":{}}\n' > "$docker_config/config.json"
+          chmod 600 "$docker_config/config.json"
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -99,3 +108,10 @@ jobs:
           docker compose --project-name minecraftskins -f "$GITHUB_WORKSPACE/docker-compose.yml" logs --tail=100
           echo "Deployment health check failed after 120 seconds" >&2
           exit 1
+
+      - name: Remove temporary Docker credentials
+        if: always()
+        run: |
+          if [ -n "${DOCKER_CONFIG:-}" ]; then
+            rm -rf -- "$DOCKER_CONFIG"
+          fi
