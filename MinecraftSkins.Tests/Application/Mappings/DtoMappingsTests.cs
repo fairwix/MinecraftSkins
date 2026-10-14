@@ -1,4 +1,3 @@
-using AutoMapper;
 using FluentAssertions;
 using MinecraftSkins.Application.Dtos;
 using MinecraftSkins.Application.Mappings;
@@ -6,19 +5,10 @@ using MinecraftSkins.Domain.Entities;
 
 namespace MinecraftSkins.Tests.Application.Mappings;
 
-public class MappingProfileTests
+public class DtoMappingsTests
 {
-    private readonly IMapper _mapper;
-
-    public MappingProfileTests()
-    {
-        var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-        config.AssertConfigurationIsValid(); 
-        _mapper = config.CreateMapper();
-    }
-
     [Fact]
-    public void Should_Map_Skin_To_SkinDto()
+    public void ToDto_ShouldMapSkinWithoutInternalFields()
     {
         var skin = new Skin
         {
@@ -27,10 +17,13 @@ public class MappingProfileTests
             BasePriceUsd = 10,
             IsAvailable = true,
             CreatedAtUtc = DateTime.UtcNow,
-            UpdatedAtUtc = DateTime.UtcNow
+            UpdatedAtUtc = DateTime.UtcNow,
+            IsDeleted = true,
+            DeletedAtUtc = DateTime.UtcNow,
+            RowVersion = [1, 2, 3]
         };
 
-        var dto = _mapper.Map<SkinDto>(skin);
+        var dto = skin.ToDto();
 
         dto.Id.Should().Be(skin.Id);
         dto.Name.Should().Be(skin.Name);
@@ -38,49 +31,25 @@ public class MappingProfileTests
         dto.IsAvailable.Should().Be(skin.IsAvailable);
         dto.CreatedAtUtc.Should().Be(skin.CreatedAtUtc);
         dto.UpdatedAtUtc.Should().Be(skin.UpdatedAtUtc);
-        dto.FinalPriceUsd.Should().Be(0);
     }
 
     [Fact]
-    public void Should_Map_CreateSkinDto_To_Skin()
+    public void ToEntity_ShouldMapOnlyCreateSkinFields()
     {
-        var dto = new CreateSkinDto
-        {
-            Name = "New",
-            BasePriceUsd = 15,
-            IsAvailable = true
-        };
+        var dto = new CreateSkinDto { Name = "New", BasePriceUsd = 15, IsAvailable = true };
 
-        var skin = _mapper.Map<Skin>(dto);
+        var skin = dto.ToEntity();
 
         skin.Name.Should().Be(dto.Name);
         skin.BasePriceUsd.Should().Be(dto.BasePriceUsd);
         skin.IsAvailable.Should().Be(dto.IsAvailable);
-        skin.Id.Should().BeEmpty(); 
+        skin.Id.Should().BeEmpty();
         skin.CreatedAtUtc.Should().Be(default);
-        skin.UpdatedAtUtc.Should().BeNull();
+        skin.RowVersion.Should().BeEmpty();
     }
 
     [Fact]
-    public void Should_Map_UpdateSkinDto_To_Skin()
-    {
-        var dto = new UpdateSkinDto
-        {
-            Name = "Updated",
-            BasePriceUsd = 20,
-            IsAvailable = false
-        };
-        var skin = new Skin { Name = "Old", BasePriceUsd = 10, IsAvailable = true };
-
-        _mapper.Map(dto, skin);
-
-        skin.Name.Should().Be("Updated");
-        skin.BasePriceUsd.Should().Be(20);
-        skin.IsAvailable.Should().BeFalse();
-    }
-
-    [Fact]
-    public void Should_Map_Purchase_To_PurchaseDto()
+    public void ToDto_ShouldMapPurchaseAndUseEmptySkinNameWhenNavigationIsMissing()
     {
         var purchase = new Purchase
         {
@@ -90,15 +59,14 @@ public class MappingProfileTests
             BtcUsdRate = 50000,
             RateSource = "External",
             PurchasedAtUtc = DateTime.UtcNow,
-            BuyerId = "user",
-            Skin = new Skin { Name = "SkinName" }
+            BuyerId = "user"
         };
 
-        var dto = _mapper.Map<PurchaseDto>(purchase);
+        var dto = purchase.ToDto();
 
         dto.Id.Should().Be(purchase.Id);
         dto.SkinId.Should().Be(purchase.SkinId);
-        dto.SkinName.Should().Be("SkinName");
+        dto.SkinName.Should().BeEmpty();
         dto.PriceUsdFinal.Should().Be(purchase.PriceUsdFinal);
         dto.BtcUsdRate.Should().Be(purchase.BtcUsdRate);
         dto.RateSource.Should().Be(purchase.RateSource);
@@ -107,7 +75,7 @@ public class MappingProfileTests
     }
 
     [Fact]
-    public void Should_Map_Purchase_To_PurchaseResponseDto()
+    public void ToResponseDto_ShouldMapPurchaseResponseFields()
     {
         var purchase = new Purchase
         {
@@ -119,7 +87,7 @@ public class MappingProfileTests
             PurchasedAtUtc = DateTime.UtcNow
         };
 
-        var dto = _mapper.Map<PurchaseResponseDto>(purchase);
+        var dto = purchase.ToResponseDto();
 
         dto.Id.Should().Be(purchase.Id);
         dto.SkinId.Should().Be(purchase.SkinId);

@@ -1,10 +1,10 @@
-using AutoMapper;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using MinecraftSkins.Application.Dtos;
 using MinecraftSkins.Application.Interfaces;
+using MinecraftSkins.Application.Mappings;
 using MinecraftSkins.Application.Services;
 using MinecraftSkins.Domain.Entities;
 
@@ -17,18 +17,15 @@ public class SkinsController : ControllerBase
     private readonly ISkinService _skinService;
     private readonly IBtcRateService _btcRateService;
     private readonly IPriceCalculator _priceCalculator;
-    private readonly IMapper _mapper;
 
     public SkinsController(
         ISkinService skinService,
         IBtcRateService btcRateService,
-        IPriceCalculator priceCalculator,
-        IMapper mapper)
+        IPriceCalculator priceCalculator)
     {
         _skinService = skinService;
         _btcRateService = btcRateService;
         _priceCalculator = priceCalculator;
-        _mapper = mapper;
     }
 
     [HttpGet]
@@ -48,7 +45,7 @@ public class SkinsController : ControllerBase
         
         var rateResult = await _btcRateService.GetCurrentRateAsync(cancellationToken);
         
-        var skinDtos = _mapper.Map<List<SkinDto>>(skins);
+        var skinDtos = skins.Select(skin => skin.ToDto()).ToList();
 
         foreach (var dto in skinDtos)
         {
@@ -69,7 +66,7 @@ public class SkinsController : ControllerBase
             return NotFound();
 
         var rateResult = await _btcRateService.GetCurrentRateAsync(cancellationToken);
-        var skinDto = _mapper.Map<SkinDto>(skin);
+        var skinDto = skin.ToDto();
         skinDto.FinalPriceUsd = _priceCalculator.CalculateFinalPrice(skin.BasePriceUsd, rateResult.Rate);
 
         return Ok(skinDto);
@@ -87,9 +84,9 @@ public class SkinsController : ControllerBase
         {
             return BadRequest(new ValidationProblemDetails(validationResult.ToDictionary()));
         }
-        var skin = _mapper.Map<Skin>(createDto);
+        var skin = createDto.ToEntity();
         var created = await _skinService.CreateAsync(skin, cancellationToken);
-        var skinDto = _mapper.Map<SkinDto>(created);
+        var skinDto = created.ToDto();
 
         return CreatedAtAction(nameof(GetSkin), new { id = created.Id }, skinDto);
     }
@@ -119,7 +116,7 @@ public class SkinsController : ControllerBase
         if (updated == null)
             return NotFound();
 
-        var skinDto = _mapper.Map<SkinDto>(updated);
+        var skinDto = updated.ToDto();
         return Ok(skinDto);
     }
 

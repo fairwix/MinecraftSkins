@@ -11,12 +11,10 @@ public static class ApplicationServiceExtensions
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddAutoMapper(typeof(MappingProfile));
         services.AddValidatorsFromAssemblyContaining<CreateSkinValidator>();
         services.AddScoped<ISkinService, SkinService>();
         services.AddScoped<IPurchaseService, PurchaseService>();
         services.AddScoped<IPriceCalculator, StandardPriceCalculator>();
-        services.AddValidatorsFromAssemblyContaining<CreateSkinValidator>();
         return services;
     }
 }

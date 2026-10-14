@@ -1,9 +1,9 @@
-using AutoMapper;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MinecraftSkins.Application.Dtos;
 using MinecraftSkins.Application.Interfaces;
+using MinecraftSkins.Application.Mappings;
 using MinecraftSkins.Application.Services;
 
 namespace MinecraftSkins.WebAPI.Controllers;
@@ -16,7 +16,6 @@ public class PurchasesController : ControllerBase
     private readonly IPurchaseService _purchaseService;
     private readonly ISkinService _skinService;
     private readonly IBtcRateService _btcRateService;
-    private readonly IMapper _mapper;
     private readonly ILogger<PurchasesController> _logger;
     private readonly IValidator<CreatePurchaseDto> _validator;
     
@@ -25,13 +24,12 @@ public class PurchasesController : ControllerBase
         IPurchaseService purchaseService,
         ISkinService skinService,
         IBtcRateService btcRateService,
-        IMapper mapper, ILogger<PurchasesController> logger, IValidator<CreatePurchaseDto> validator)
+        ILogger<PurchasesController> logger, IValidator<CreatePurchaseDto> validator)
     
     {
         _purchaseService = purchaseService;
         _skinService = skinService;
         _btcRateService = btcRateService;
-        _mapper = mapper;
         _logger = logger;
         _validator = validator;
     }
@@ -65,7 +63,7 @@ public class PurchasesController : ControllerBase
         if (purchase == null)
             return StatusCode(500, "Failed to create purchase");
         
-        var response = _mapper.Map<PurchaseResponseDto>(purchase);
+        var response = purchase.ToResponseDto();
     
         return CreatedAtAction(nameof(GetPurchase), new { id = purchase.Id }, response);
     }
@@ -80,7 +78,7 @@ public class PurchasesController : ControllerBase
         if (!User.IsInRole("Admin") && purchase.BuyerId != User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
             return NotFound();
 
-        var purchaseDto = _mapper.Map<PurchaseDto>(purchase);
+        var purchaseDto = purchase.ToDto();
         return Ok(purchaseDto);
     }
 
@@ -105,7 +103,7 @@ public class PurchasesController : ControllerBase
         var purchases = await _purchaseService.GetPurchasesAsync(
             buyerId, skinId, from, to, skip, take, cancellationToken);
 
-        var purchaseDtos = _mapper.Map<List<PurchaseDto>>(purchases);
+        var purchaseDtos = purchases.Select(purchase => purchase.ToDto()).ToList();
         return Ok(purchaseDtos);
     }
 }

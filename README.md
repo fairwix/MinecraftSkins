@@ -36,7 +36,7 @@
 - **.NET 9** + ASP.NET Core Web API
 - **Entity Framework Core** + PostgreSQL
 - **FluentValidation** — валидация DTO
-- **AutoMapper** — маппинг сущностей
+- **Явный маппинг DTO** — ручное преобразование моделей в Application
 - **IMemoryCache** — кэширование курса BTC
 - **CancellationToken** — используется в асинхронных запросах к БД и HTTP API
 - **ILogger<T>** — логирование событий и ошибок инфраструктуры и API
@@ -214,7 +214,7 @@ python3 -m http.server 8080
 -  **PurchaseService** — создание покупки, идемпотентность, optimistic concurrency
 -  **SkinService** — CRUD операции, soft delete, фильтрация
 -  **FluentValidation** — все DTO (Create/Update Skin, Create Purchase)
--  **AutoMapper** — корректность маппингов
+-  **DTO mapping** — корректность явных преобразований сущностей и DTO
 -  **Кастомные исключения** — SkinUnavailableException, ExternalServiceUnavailableException
 
 **Infrastructure Layer (выборочно):**

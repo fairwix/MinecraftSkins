@@ -1,4 +1,3 @@
-using AutoMapper;
 using FluentAssertions;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +34,5 @@ public class ApplicationServiceExtensionsTests
         serviceProvider.GetService<IValidator<UpdateSkinDto>>().Should().BeOfType<UpdateSkinValidator>();
         serviceProvider.GetService<IValidator<CreatePurchaseDto>>().Should().BeOfType<CreatePurchaseValidator>();
         
-        var mapper = serviceProvider.GetService<IMapper>();
-        mapper.Should().NotBeNull();
     }
 }
