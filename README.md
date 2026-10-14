@@ -1,6 +1,6 @@
 # Minecraft Skins 🎮
 
-[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-9.0-512BD4)](https://dotnet.microsoft.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-✓-2496ED)](https://www.docker.com/)
 [![Tests](https://img.shields.io/badge/Tests-✓-success)](https://github.com/fairwix/MinecraftSkins)
@@ -156,6 +156,9 @@ docker-compose down
 # Задайте Authentication__ApiKeys__0__Key, Authentication__ApiKeys__0__UserId
 # и Authentication__ApiKeys__0__Role=Admin в окружении процесса.
 # При необходимости добавьте пользовательский ключ с индексом 1 и ролью User.
+
+# Установите EF Core CLI 9.x, если команда dotnet ef ещё не доступна
+dotnet tool install --global dotnet-ef --version 9.0.0
 
 # 2. Примените миграции
 dotnet ef database update -p MinecraftSkins.Infrastructure -s MinecraftSkins.WebAPI
