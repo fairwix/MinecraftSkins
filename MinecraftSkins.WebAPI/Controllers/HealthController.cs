@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace MinecraftSkins.WebAPI.Controllers;
@@ -34,6 +35,7 @@ public class HealthController : ControllerBase
     }
     
     [HttpGet("detailed")]
+    [Authorize(Policy = "Admin")]
     public async Task<ActionResult<object>> GetDetailedHealth(CancellationToken cancellationToken)
     {
         var report = await _healthCheckService.CheckHealthAsync(cancellationToken);

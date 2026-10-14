@@ -114,7 +114,7 @@ public class PurchaseServiceTests : IDisposable
         await _context.SaveChangesAsync();
         
         var result = await _service.CreatePurchaseAsync(
-            skin.Id, "different-user", 60000, "Cache", idempotencyKey, CancellationToken.None);
+            skin.Id, "user123", 60000, "Cache", idempotencyKey, CancellationToken.None);
         
         result.Should().NotBeNull();
         result!.Id.Should().Be(existingPurchase.Id);
@@ -123,6 +123,43 @@ public class PurchaseServiceTests : IDisposable
 
         var purchasesCount = await _context.Purchases.CountAsync();
         purchasesCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreatePurchaseAsync_WithAnotherBuyersIdempotencyKey_CreatesOwnPurchase()
+    {
+        var skin = new Skin
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Skin",
+            BasePriceUsd = 100,
+            IsAvailable = true
+        };
+        var idempotencyKey = "user-scoped-key";
+        var otherBuyerPurchase = new Purchase
+        {
+            Id = Guid.NewGuid(),
+            SkinId = skin.Id,
+            Skin = skin,
+            BuyerId = "user123",
+            IdempotencyKey = idempotencyKey,
+            BtcUsdRate = 50000,
+            RateSource = "External",
+            PriceUsdFinal = 150,
+            PurchasedAtUtc = DateTime.UtcNow
+        };
+
+        await _context.Skins.AddAsync(skin);
+        await _context.Purchases.AddAsync(otherBuyerPurchase);
+        await _context.SaveChangesAsync();
+
+        var result = await _service.CreatePurchaseAsync(
+            skin.Id, "another-user", 60000, "Cache", idempotencyKey, CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Id.Should().NotBe(otherBuyerPurchase.Id);
+        result.BuyerId.Should().Be("another-user");
+        (await _context.Purchases.CountAsync()).Should().Be(2);
     }
 
     [Fact]
@@ -215,7 +252,7 @@ public class PurchaseServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetByIdempotencyKeyAsync_ShouldReturnPurchase_WhenExists()
+    public async Task GetByIdempotencyKeyAsync_ShouldReturnPurchase_WhenKeyBelongsToBuyer()
     {
         var idempotencyKey = "test-key-123";
         var purchase = new Purchase
@@ -229,7 +266,7 @@ public class PurchaseServiceTests : IDisposable
         await _context.Purchases.AddAsync(purchase);
         await _context.SaveChangesAsync();
         
-        var result = await _service.GetByIdempotencyKeyAsync(idempotencyKey, CancellationToken.None);
+        var result = await _service.GetByIdempotencyKeyAsync("user123", idempotencyKey, CancellationToken.None);
         
         result.Should().NotBeNull();
         result!.IdempotencyKey.Should().Be(idempotencyKey);
@@ -238,7 +275,7 @@ public class PurchaseServiceTests : IDisposable
     [Fact]
     public async Task GetByIdempotencyKeyAsync_ShouldReturnNull_WhenNotExists()
     {
-        var result = await _service.GetByIdempotencyKeyAsync("non-existent", CancellationToken.None);
+        var result = await _service.GetByIdempotencyKeyAsync("user123", "non-existent", CancellationToken.None);
         
         result.Should().BeNull();
     }

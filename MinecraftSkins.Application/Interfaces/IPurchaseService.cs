@@ -13,6 +13,6 @@ public interface IPurchaseService
         CancellationToken cancellationToken);
 
     Task<Purchase?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
-    Task<Purchase?> GetByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken);
+    Task<Purchase?> GetByIdempotencyKeyAsync(string buyerId, string idempotencyKey, CancellationToken cancellationToken);
     Task<List<Purchase>> GetPurchasesAsync(string? buyerId, Guid? skinId, DateTime? from, DateTime? to, int skip, int take, CancellationToken cancellationToken);
 }

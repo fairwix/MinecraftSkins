@@ -1,6 +1,7 @@
 using AutoMapper;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MinecraftSkins.Application.Dtos;
 using MinecraftSkins.Application.Interfaces;
 using MinecraftSkins.Application.Services;
@@ -8,6 +9,7 @@ using MinecraftSkins.Application.Services;
 namespace MinecraftSkins.WebAPI.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class PurchasesController : ControllerBase
 {
@@ -37,7 +39,6 @@ public class PurchasesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<PurchaseResponseDto>> CreatePurchase(
         CreatePurchaseDto purchaseDto, 
-        [FromHeader(Name = "X-User-Id")] string userId,
         [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
         CancellationToken cancellationToken)
     {
@@ -47,8 +48,9 @@ public class PurchasesController : ControllerBase
             return BadRequest(new ValidationProblemDetails(validationResult.ToDictionary()));
         }
 
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrWhiteSpace(userId))
-            return BadRequest("X-User-Id header is required");
+            return Unauthorized();
         
         var rateResult = await _btcRateService.GetCurrentRateAsync(cancellationToken);
         
@@ -75,6 +77,9 @@ public class PurchasesController : ControllerBase
         if (purchase == null)
             return NotFound();
 
+        if (!User.IsInRole("Admin") && purchase.BuyerId != User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+            return NotFound();
+
         var purchaseDto = _mapper.Map<PurchaseDto>(purchase);
         return Ok(purchaseDto);
     }
@@ -89,14 +94,13 @@ public class PurchasesController : ControllerBase
         [FromQuery] int take = 20,
         CancellationToken cancellationToken = default)
     {
-        string? buyerId = null;
-        if (mineOnly)
-        {
-            if (!Request.Headers.TryGetValue("X-User-Id", out var userIdValues) || string.IsNullOrWhiteSpace(userIdValues))
-                return BadRequest("X-User-Id header is required for mineOnly filter");
-            
-            buyerId = userIdValues.ToString();
-        }
+        var callerId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(callerId))
+            return Unauthorized();
+
+        // A regular user can only read their own purchases, regardless of query parameters.
+        // Admin keys may omit mineOnly to inspect all purchases.
+        string? buyerId = User.IsInRole("Admin") && !mineOnly ? null : callerId;
 
         var purchases = await _purchaseService.GetPurchasesAsync(
             buyerId, skinId, from, to, skip, take, cancellationToken);

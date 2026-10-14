@@ -25,7 +25,7 @@ public class PurchaseService : IPurchaseService
         _priceCalculator = priceCalculator;
     }
     
-    public async Task<Purchase?> GetByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken)
+    public async Task<Purchase?> GetByIdempotencyKeyAsync(string buyerId, string idempotencyKey, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
             return null;
@@ -33,7 +33,7 @@ public class PurchaseService : IPurchaseService
         return await _context.Purchases
             .Include(p => p.Skin)
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.IdempotencyKey == idempotencyKey, cancellationToken);
+            .FirstOrDefaultAsync(p => p.BuyerId == buyerId && p.IdempotencyKey == idempotencyKey, cancellationToken);
     }
 
     public async Task<Purchase?> CreatePurchaseAsync(
@@ -53,7 +53,7 @@ public class PurchaseService : IPurchaseService
             var existing = await _context.Purchases
                 .Include(p => p.Skin)
                 .FirstOrDefaultAsync(
-                    p => p.IdempotencyKey == idempotencyKey,
+                    p => p.IdempotencyKey == idempotencyKey && p.BuyerId == buyerId,
                     cancellationToken);
 
             if (existing != null)
@@ -116,11 +116,16 @@ public class PurchaseService : IPurchaseService
         var existing = await _context.Purchases
             .Include(p => p.Skin)
             .AsNoTracking()
-            .FirstAsync(
-                p => p.IdempotencyKey == idempotencyKey,
+            .FirstOrDefaultAsync(
+                p => p.IdempotencyKey == idempotencyKey && p.BuyerId == buyerId,
                 cancellationToken);
 
-        return existing;
+        if (existing is not null)
+            return existing;
+
+        // The current database index may still be global until the next migration is applied.
+        // Do not disclose or return another buyer's purchase if their key collided.
+        throw new IdempotencyKeyConflictException();
     }
     catch
     {

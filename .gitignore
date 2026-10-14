@@ -10,6 +10,7 @@ TestResults/
 
 ## Docker
 docker-compose.override.yml
+.env
 
 ## OS
 .DS_Store
@@ -32,6 +33,10 @@ coverage/
 ## Logs
 logs/
 *.log
+
+## Local TLS material
+nginx/certs/*.key
+nginx/certs/*.crt
 
 ## Temp files
 all_code.txt

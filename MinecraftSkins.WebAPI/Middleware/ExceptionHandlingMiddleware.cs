@@ -77,6 +77,12 @@ public class ExceptionHandlingMiddleware
                 title = "Concurrency conflict";
                 detail = "The resource was modified by another user. Please try again.";
                 break;
+
+            case IdempotencyKeyConflictException:
+                statusCode = (int)HttpStatusCode.Conflict;
+                title = "Idempotency key conflict";
+                detail = "The idempotency key cannot be used for this buyer.";
+                break;
             
             case ExternalServiceUnavailableException exс:
                 statusCode = (int)HttpStatusCode.ServiceUnavailable;

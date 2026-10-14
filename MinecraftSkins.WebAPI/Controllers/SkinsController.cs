@@ -1,6 +1,7 @@
 using AutoMapper;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using MinecraftSkins.Application.Dtos;
 using MinecraftSkins.Application.Interfaces;
@@ -75,6 +76,7 @@ public class SkinsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "Admin")]
     public async Task<ActionResult<SkinDto>> CreateSkin(
         CreateSkinDto createDto, 
         [FromServices] IValidator<CreateSkinDto> validator,
@@ -94,6 +96,7 @@ public class SkinsController : ControllerBase
     
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "Admin")]
     public async Task<ActionResult<SkinDto>> UpdateSkin(
         Guid id, 
         UpdateSkinDto updateDto,
@@ -121,6 +124,7 @@ public class SkinsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> DeleteSkin(Guid id, CancellationToken cancellationToken)
     {
         var deleted = await _skinService.DeleteAsync(id, cancellationToken);

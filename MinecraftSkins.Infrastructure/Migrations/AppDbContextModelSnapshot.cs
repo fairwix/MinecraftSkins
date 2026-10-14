@@ -67,7 +67,7 @@ namespace MinecraftSkins.Infrastructure.Migrations
 
                     b.HasIndex("BuyerId");
 
-                    b.HasIndex("IdempotencyKey")
+                    b.HasIndex("BuyerId", "IdempotencyKey")
                         .IsUnique();
 
                     b.HasIndex("PurchasedAtUtc");

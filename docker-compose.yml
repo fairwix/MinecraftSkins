@@ -6,10 +6,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${MCS_POSTGRES_PASSWORD:?Set MCS_POSTGRES_PASSWORD in .env}
       POSTGRES_DB: minecraftskins
-    ports:
-      - "5433:5432"  
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -20,6 +18,26 @@ services:
       timeout: 5s
       retries: 5
   
+  migrator:
+    build:
+      context: .
+      dockerfile: MinecraftSkins.WebAPI/Dockerfile
+    command: ["--migrate-only"]
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=${MCS_POSTGRES_PASSWORD:?Set MCS_POSTGRES_PASSWORD in .env}
+      - Authentication__ApiKeys__0__Key=${MCS_ADMIN_API_KEY:?Set MCS_ADMIN_API_KEY in .env}
+      - Authentication__ApiKeys__0__UserId=${MCS_ADMIN_USER_ID:-admin}
+      - Authentication__ApiKeys__0__Role=Admin
+      - Authentication__ApiKeys__1__Key=${MCS_DEMO_USER_API_KEY:?Set MCS_DEMO_USER_API_KEY in .env}
+      - Authentication__ApiKeys__1__UserId=${MCS_DEMO_USER_ID:-demo}
+      - Authentication__ApiKeys__1__Role=User
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - minecraftskins-network
+
   backend1:
     build:
       context: .
@@ -27,13 +45,21 @@ services:
     container_name: minecraftskins-backend1
     restart: unless-stopped
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=${MCS_POSTGRES_PASSWORD:?Set MCS_POSTGRES_PASSWORD in .env}
       - INSTANCE_ID=backend1   
+      - Authentication__ApiKeys__0__Key=${MCS_ADMIN_API_KEY:?Set MCS_ADMIN_API_KEY in .env}
+      - Authentication__ApiKeys__0__UserId=${MCS_ADMIN_USER_ID:-admin}
+      - Authentication__ApiKeys__0__Role=Admin
+      - Authentication__ApiKeys__1__Key=${MCS_DEMO_USER_API_KEY:?Set MCS_DEMO_USER_API_KEY in .env}
+      - Authentication__ApiKeys__1__UserId=${MCS_DEMO_USER_ID:-demo}
+      - Authentication__ApiKeys__1__Role=User
     depends_on:
       postgres:
         condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
     networks:
       - minecraftskins-network
 
@@ -44,13 +70,21 @@ services:
     container_name: minecraftskins-backend2
     restart: unless-stopped
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=${MCS_POSTGRES_PASSWORD:?Set MCS_POSTGRES_PASSWORD in .env}
       - INSTANCE_ID=backend2  
+      - Authentication__ApiKeys__0__Key=${MCS_ADMIN_API_KEY:?Set MCS_ADMIN_API_KEY in .env}
+      - Authentication__ApiKeys__0__UserId=${MCS_ADMIN_USER_ID:-admin}
+      - Authentication__ApiKeys__0__Role=Admin
+      - Authentication__ApiKeys__1__Key=${MCS_DEMO_USER_API_KEY:?Set MCS_DEMO_USER_API_KEY in .env}
+      - Authentication__ApiKeys__1__UserId=${MCS_DEMO_USER_ID:-demo}
+      - Authentication__ApiKeys__1__Role=User
     depends_on:
       postgres:
         condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
     networks:
       - minecraftskins-network
 
@@ -61,13 +95,21 @@ services:
     container_name: minecraftskins-backend3
     restart: unless-stopped
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=${MCS_POSTGRES_PASSWORD:?Set MCS_POSTGRES_PASSWORD in .env}
       - INSTANCE_ID=backend3  
+      - Authentication__ApiKeys__0__Key=${MCS_ADMIN_API_KEY:?Set MCS_ADMIN_API_KEY in .env}
+      - Authentication__ApiKeys__0__UserId=${MCS_ADMIN_USER_ID:-admin}
+      - Authentication__ApiKeys__0__Role=Admin
+      - Authentication__ApiKeys__1__Key=${MCS_DEMO_USER_API_KEY:?Set MCS_DEMO_USER_API_KEY in .env}
+      - Authentication__ApiKeys__1__UserId=${MCS_DEMO_USER_ID:-demo}
+      - Authentication__ApiKeys__1__Role=User
     depends_on:
       postgres:
         condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
     networks:
       - minecraftskins-network
   
@@ -78,13 +120,21 @@ services:
     container_name: minecraftskins-backend4
     restart: unless-stopped
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=${MCS_POSTGRES_PASSWORD:?Set MCS_POSTGRES_PASSWORD in .env}
       - INSTANCE_ID=backend4
+      - Authentication__ApiKeys__0__Key=${MCS_ADMIN_API_KEY:?Set MCS_ADMIN_API_KEY in .env}
+      - Authentication__ApiKeys__0__UserId=${MCS_ADMIN_USER_ID:-admin}
+      - Authentication__ApiKeys__0__Role=Admin
+      - Authentication__ApiKeys__1__Key=${MCS_DEMO_USER_API_KEY:?Set MCS_DEMO_USER_API_KEY in .env}
+      - Authentication__ApiKeys__1__UserId=${MCS_DEMO_USER_ID:-demo}
+      - Authentication__ApiKeys__1__Role=User
     depends_on:
       postgres:
         condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
     networks:
       - minecraftskins-network
     
@@ -95,18 +145,28 @@ services:
       container_name: minecraftskins-backend5
       restart: unless-stopped
       environment:
-        - ASPNETCORE_ENVIRONMENT=Development
+        - ASPNETCORE_ENVIRONMENT=Production
         - ASPNETCORE_URLS=http://+:80
-        - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres
+        - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=minecraftskins;Username=postgres;Password=${MCS_POSTGRES_PASSWORD:?Set MCS_POSTGRES_PASSWORD in .env}
         - INSTANCE_ID=backend5
+        - Authentication__ApiKeys__0__Key=${MCS_ADMIN_API_KEY:?Set MCS_ADMIN_API_KEY in .env}
+        - Authentication__ApiKeys__0__UserId=${MCS_ADMIN_USER_ID:-admin}
+        - Authentication__ApiKeys__0__Role=Admin
+        - Authentication__ApiKeys__1__Key=${MCS_DEMO_USER_API_KEY:?Set MCS_DEMO_USER_API_KEY in .env}
+        - Authentication__ApiKeys__1__UserId=${MCS_DEMO_USER_ID:-demo}
+        - Authentication__ApiKeys__1__Role=User
       depends_on:
         postgres:
           condition: service_healthy
+        migrator:
+          condition: service_completed_successfully
       networks:
         - minecraftskins-network
     
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     container_name: minecraftskins-nginx
     restart: unless-stopped
     ports:
@@ -114,7 +174,6 @@ services:
       - "443:443"    # HTTPS (основной вход)
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro   # конфиг Nginx
-      - ./nginx/certs:/etc/nginx/certs:ro             # SSL сертификаты
       - ./frontend:/usr/share/nginx/html:ro           # статика фронтенда 
       - ./nginx/static:/usr/share/nginx/static:ro     # статика для теста
     depends_on:
@@ -142,7 +201,7 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     networks:
       - minecraftskins-network
     restart: unless-stopped
@@ -153,7 +212,7 @@ services:
     volumes:
       - ./loki/loki-config.yml:/etc/loki/loki-config.yml
     ports:
-      - "3100:3100"
+      - "127.0.0.1:3100:3100"
     networks:
       - minecraftskins-network
     restart: unless-stopped
@@ -174,7 +233,7 @@ services:
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
       
     networks:
       - minecraftskins-network

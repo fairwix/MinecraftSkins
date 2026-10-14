@@ -33,13 +33,14 @@
 ## Технологический стек
 
 ### Backend
-- **.NET 8** + ASP.NET Core Web API
+- **.NET 9** + ASP.NET Core Web API
 - **Entity Framework Core** + PostgreSQL
 - **FluentValidation** — валидация DTO
 - **AutoMapper** — маппинг сущностей
 - **IMemoryCache** — кэширование курса BTC
-- **CancellationToken** — передаётся во все асинхронные методы (БД, HTTP-вызовы)
-- **ILogger<T>** — структурированное логирование во всех сервисах и middleware
+- **CancellationToken** — используется в асинхронных запросах к БД и HTTP API
+- **ILogger<T>** — логирование событий и ошибок инфраструктуры и API
+- **Bearer API keys** — аутентификация пользователей и роли для административных операций
 
 ### Frontend
 - **HTML5**, **CSS3**, **JavaScript** (vanilla)
@@ -79,14 +80,14 @@ MinecraftSkins/
 - `Purchase` — чек покупки (Id, SkinId, PriceUsdFinal, BtcUsdRate, RateSource)
 
 **Application** — бизнес-логика:
-- Интерфейсы репозиториев и сервисов
+- Интерфейсы сервисов и `IAppDbContext`
 - DTO и маппинги
 - Валидация через FluentValidation
 - Калькуляторы цены (Standard/Promo)
 
 **Infrastructure** — детали реализации:
 - EF Core DbContext и конфигурации
-- Реализация репозиториев
+- EF Core `DbContext` и конфигурации PostgreSQL
 - HTTP-клиент для CoinGecko API
 - Кэширование и миграции
 
@@ -119,15 +120,23 @@ FinalPrice = BasePriceUsd × (1 + BTC_USD_Rate ÷ 50000)
 git clone https://github.com/fairwix/MinecraftSkins.git
 cd MinecraftSkins
 
+# Создать локальный файл настроек и задать два независимых секрета
+cp .env.example .env
+openssl rand -hex 32  # результат вставьте в MCS_ADMIN_API_KEY в .env
+openssl rand -hex 32  # другой результат вставьте в MCS_DEMO_USER_API_KEY в .env
+openssl rand -hex 32  # третий результат вставьте в MCS_POSTGRES_PASSWORD в .env
+
 # Запустить все сервисы
 docker-compose up --build
 ```
 
 **После запуска:**
-- Frontend: http://localhost:8080
-- Backend API: http://localhost:5001
-- Swagger UI: http://localhost:5001/swagger
-- Health Check: http://localhost:5001/health
+- Frontend: https://localhost (локальный самоподписанный сертификат; браузер покажет предупреждение)
+- Backend API: `https://localhost/api`
+- Список скинов: `https://localhost/api/skins`
+- Prometheus, Loki и Grafana доступны только с локального компьютера на портах 9090, 3100 и 3000
+- PostgreSQL доступен контейнерам только во внутренней Docker-сети
+- Swagger и backend-порты не публикуются через Nginx
 
 **Остановка:**
 ```bash
@@ -137,17 +146,16 @@ docker-compose down
 ### Локальный запуск (без Docker)
 
 **Требования:**
-- .NET 8 SDK
+- .NET 9 SDK
 - PostgreSQL 15
 - Любой браузер для фронтенда
 
 ```bash
-# 1. Настройте строку подключения в appsettings.Development.json
-# {
-#   "ConnectionStrings": {
-#     "DefaultConnection": "Host=localhost;Port=5432;Database=minecraftskins;Username=postgres;Password=postgres"
-#   }
-# }
+# Настройте ConnectionStrings:DefaultConnection в appsettings.Development.json
+# (этот локальный файл не отслеживается Git и должен указывать на вашу PostgreSQL)
+# Задайте Authentication__ApiKeys__0__Key, Authentication__ApiKeys__0__UserId
+# и Authentication__ApiKeys__0__Role=Admin в окружении процесса.
+# При необходимости добавьте пользовательский ключ с индексом 1 и ролью User.
 
 # 2. Примените миграции
 dotnet ef database update -p MinecraftSkins.Infrastructure -s MinecraftSkins.WebAPI
@@ -169,6 +177,9 @@ python3 -m http.server 8080
 ##  API Endpoints
 
 ### Skins
+
+Для `POST /api/purchases` и всех маршрутов покупок требуется `Authorization: Bearer <API_KEY>`. ID покупателя берётся из конфигурации ключа; `X-User-Id` не принимается. Пользовательский ключ даёт доступ к собственной истории покупок, ключ с ролью `Admin` может читать все покупки. Для создания, изменения и удаления скинов требуется роль `Admin`.
+
 | Метод | Endpoint | Описание | Параметры |
 |--------|----------|----------|-----------|
 | GET | `/api/skins` | Список скинов | `availableOnly`, `search`, `skip`, `take` |
@@ -185,7 +196,7 @@ python3 -m http.server 8080
 ### Purchases
 | Метод | Endpoint | Описание | Заголовки |
 |--------|----------|----------|-----------|
-| POST | `/api/purchases` | Купить скин | `X-User-Id`, `Idempotency-Key` |
+| POST | `/api/purchases` | Купить скин | `Authorization: Bearer`, `Idempotency-Key` |
 | GET | `/api/purchases` | История покупок | `mineOnly`, `skinId`, `from`, `to`, `skip`, `take` |
 | GET | `/api/purchases/{id}` | Детали покупки | — |
 
@@ -276,17 +287,17 @@ reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coveragereport"
 
 ##  Мониторинг
 
-- **Health Check**: http://localhost:5001/health
-- **Детальный Health Check**: http://localhost:5001/health/detailed
-- **Swagger**: http://localhost:5001/swagger
-- **Логи**: `docker-compose logs -f`
+- Health checks и Prometheus endpoint доступны внутри Docker-сети.
+- Детальная проверка API требует admin Bearer-ключ.
+- Swagger доступен только при локальном запуске в Development.
+- Логи Compose: `docker-compose logs -f`
 
 ##  Безопасность и конкурентность
 
 - **Idempotency-Key** — защита от повторных покупок (хранится в БД)
 - **RowVersion** — optimistic concurrency для скинов
 - **Soft delete** — с глобальным фильтром в EF Core
-- **X-User-Id** — мок-авторизация для демо
+- **Bearer API key** — ключи и роли задаются конфигурацией; секреты не хранятся в Git
 - **Транзакции** — атомарность операций покупки
 
 ##  Особенности реализации

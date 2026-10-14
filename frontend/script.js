@@ -7,8 +7,7 @@ if (!window.APP_CONFIG || !window.APP_CONFIG.apiBaseUrl) {
 }
 const API_BASE_URL = window.APP_CONFIG.apiBaseUrl;
 
-// ID пользователя (можно оставить как есть или тоже вынести в конфиг)
-const USER_ID = 'user123';
+const API_KEY_STORAGE = 'minecraftSkinsApiKey';
 
 // Состояние приложения
 let currentBtcRate = null;
@@ -18,17 +17,25 @@ const purchasedSkins = new Set();
 
 // Вспомогательные функции
 function getHeaders() {
-    return {
-        'Content-Type': 'application/json',
-        'X-User-Id': USER_ID
-    };
+    const headers = { 'Content-Type': 'application/json' };
+    const apiKey = sessionStorage.getItem(API_KEY_STORAGE);
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+    return headers;
+}
+
+function requestApiKey() {
+    const existingKey = sessionStorage.getItem(API_KEY_STORAGE);
+    if (existingKey) return existingKey;
+
+    const apiKey = window.prompt('Введите API-ключ пользователя для покупок и истории:');
+    if (!apiKey?.trim()) return null;
+    sessionStorage.setItem(API_KEY_STORAGE, apiKey.trim());
+    return apiKey.trim();
 }
 
 // Генерация уникального ключа идемпотентности
 function generateIdempotencyKey(skinId) {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 10);
-    return `${USER_ID}-${skinId}-${timestamp}-${random}`;
+    return crypto.randomUUID();
 }
 
 // Показать уведомление
@@ -236,6 +243,8 @@ async function buySkin(event) {
     const button = event.currentTarget;
     const skinId = button.dataset.skinId;
     const originalText = button.innerHTML;
+    const apiKey = requestApiKey();
+    if (!apiKey) return;
 
     // Генерируем уникальный ключ для этой операции
     // Ключ генерируется ОДИН раз и НЕ УДАЛЯЕТСЯ после покупки
@@ -251,7 +260,7 @@ async function buySkin(event) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-User-Id': USER_ID,
+                'Authorization': `Bearer ${apiKey}`,
                 'Idempotency-Key': idempotencyKey  // Один ключ на всю операцию
             },
             body: JSON.stringify({ skinId })
@@ -303,6 +312,8 @@ async function buySkin(event) {
 
 // Загрузка покупок
 async function loadPurchases() {
+    if (!requestApiKey()) return;
+
     const purchasesList = document.getElementById('purchases-list');
     const errorDiv = document.getElementById('purchases-error');
 
@@ -387,14 +398,15 @@ async function loadPurchases() {
 // Тест идемпотентности
 window.testIdempotency = async function(skinId) {
     const key = generateIdempotencyKey(skinId);
-    console.log('🧪 Тестовый ключ:', key);
+    const apiKey = requestApiKey();
+    if (!apiKey) return;
 
     for (let i = 0; i < 3; i++) {
         const response = await fetch(`${API_BASE_URL}/purchases`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-User-Id': USER_ID,
+                'Authorization': `Bearer ${apiKey}`,
                 'Idempotency-Key': key
             },
             body: JSON.stringify({ skinId })
@@ -411,16 +423,17 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(loadBtcRate, 30000);
 
     // Загружаем историю покупок в фоне, чтобы узнать, какие скины уже куплены
-    setTimeout(() => {
-        fetch(`${API_BASE_URL}/purchases?mineOnly=true`, {
-            headers: getHeaders()
-        })
-            .then(r => r.json())
-            .then(purchases => {
-                purchases.forEach(p => purchasedSkins.add(p.skinId));
-                // Обновляем отображение кнопок
-                loadSkins();
+    if (sessionStorage.getItem(API_KEY_STORAGE)) {
+        setTimeout(() => {
+            fetch(`${API_BASE_URL}/purchases?mineOnly=true`, {
+                headers: getHeaders()
             })
-            .catch(console.error);
-    }, 500);
+                .then(r => r.ok ? r.json() : Promise.reject(new Error(`Ошибка ${r.status}`)))
+                .then(purchases => {
+                    purchases.forEach(p => purchasedSkins.add(p.skinId));
+                    loadSkins();
+                })
+                .catch(console.error);
+        }, 500);
+    }
 });

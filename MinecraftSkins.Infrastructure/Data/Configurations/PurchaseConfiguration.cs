@@ -52,7 +52,7 @@ public class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
         builder.HasIndex(x => x.SkinId);
         builder.HasIndex(x => x.BuyerId);
         builder.HasIndex(x => x.PurchasedAtUtc);
-        builder.HasIndex(x => x.IdempotencyKey).IsUnique();
+        builder.HasIndex(x => new { x.BuyerId, x.IdempotencyKey }).IsUnique();
         
         builder.HasIndex(x => x.RateSource);
     }
